@@ -7,7 +7,10 @@ class RegistryClient:
 
     def __init__(self, registry, username, password, cacert):
         self.registry = registry
-        self.auth = aiohttp.BasicAuth(username, password)
+        if username and password:
+            self.auth = aiohttp.BasicAuth(username, password)
+        else:
+            self.auth = aiohttp.BasicAuth("xxx", "xxx")
         if cacert:
             self.sslcontext = ssl.create_default_context(cafile=cacert)
         else:
@@ -18,7 +21,7 @@ class RegistryClient:
         async with aiohttp.ClientSession(auth=self.auth) as session:
             async with session.get(self.registry + "/_catalog", ssl=self.sslcontext) as resp:
                 response = await resp.json()
-                repositories.extend(response["repositories"])
+                repositories.update(dict((el, {'tags': 0, 'size': 0}) for el in response["repositories"]))
 
     async def retrieveTagsForRepository(self, repository, tags):
         async with aiohttp.ClientSession(auth=self.auth) as session:

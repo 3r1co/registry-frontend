@@ -25,7 +25,8 @@ $(document).ready(function() {
             { "data": "repo" },
             { "data": "tags" },
             { "data": "size" , render: $.fn.dataTable.render.byteconversion( 3 )}
-          ]
+          ],
+        "order": [[ 2, "desc" ]]
     }
     );
 } )

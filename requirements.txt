@@ -2,4 +2,4 @@ requests
 progressbar2
 aiohttp
 sanic
-sanic-scheduler
+apscheduler

@@ -21,22 +21,15 @@ gulp.task('vendor', function() {
     .pipe(gulp.dest('./vendor/jquery'))
 
   // DataTables
-  gulp.src([
-    './node_modules/jquery/dist/*',
-    '!./node_modules/jquery/dist/core.js'
-  ])
-  .pipe(gulp.dest('./vendor/jquery'))
-
-    // DataTables
-    gulp.src([
-      './node_modules/datatables.net/js/*',
-      './node_modules/datatables.net-jqui/js/*',
-      './node_modules/datatables.net-jqui/css/*',
-    ])
+   gulp.src([
+     './node_modules/datatables.net/js/*',
+     './node_modules/datatables.net-jqui/js/*',
+     './node_modules/datatables.net-jqui/css/*',
+   ])
     .pipe(gulp.dest('./vendor/datatables'))
 
     gulp.src([
-      './dockerregistry.js'
+      './dockerregistry.js',
     ])
     .pipe(gulp.dest('./vendor'))
 

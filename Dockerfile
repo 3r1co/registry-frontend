@@ -5,21 +5,40 @@ WORKDIR /app
 
 RUN npm install -g gulp
 
+ADD static/package.json .
+RUN npm install
+
 ADD static .
+RUN gulp
 
-RUN npm install && gulp
+FROM alpine
 
+RUN apk add --no-cache python3 \
+                       python3-dev \
+                       build-base \
+                       git && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --upgrade pip setuptools && \
+    pip3 install sanic && \
+    apk del python3-dev \
+            build-base \
+            git && \
+    rm -r /root/.cache
 
-FROM python:3-alpine
 
 WORKDIR /app
 ADD requirements.txt .
 RUN pip install -r requirements.txt
 
 #This is a really dirty hack as it seems to DynamicMessage ProgressBar Widget only supports numbers
-RUN sed -i 's/:6.3g//g' /usr/local/lib/python3.7/site-packages/progressbar/widgets.py
+WORKDIR /usr/lib/python3.6/site-packages/progressbar
+RUN sed -i 's/:6.3g//g' widgets.py && \
+    pip3 uninstall --yes pip uvloop ujson
 
-COPY --from=frontend-builder /app/vendor .
+WORKDIR /app
+COPY --from=frontend-builder /app/vendor ./static/vendor
+ADD static/index.html static/favicon.ico ./static/
 ADD registryclient.py helper.py main.py ./
 
-CMD ["python", "main.py"]
+ENTRYPOINT ["/usr/bin/python3", "main.py"]
