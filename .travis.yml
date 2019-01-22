@@ -6,6 +6,11 @@ services:
 - docker
 addons:
   ssh_known_hosts: 46.101.222.96
+cache: pip
+install:
+  - pip install -r requirements.txt
+script:
+  - echo "Success"
 env:
 - DOCKER_IMAGE_NAME="r.3r1.co/registry-ui:$TRAVIS_BUILD_NUMBER"
 after_success:

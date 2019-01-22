@@ -36,7 +36,8 @@ async def fetch():
     if cli:
         bar = progressbar.ProgressBar(maxval=len(sizes), widgets=widgets)
         count = 1
-    logging.info("Fetched %d repositories" % len(sizes))
+    else:
+        logging.info("Fetching the info for %d repositories" % len(sizes))
 
     for repo in sizes.keys():
         tags = list()
@@ -53,8 +54,10 @@ async def fetch():
         else:
             logging.info("Updated repository with %s with %d tags (Total size: %s)" % (repo, len(tags), sizeof_fmt(size)))
 
-    bar.finish()
-    logging.info("Finished updating repositories.")
+    if cli:
+        bar.finish()
+    else: 
+        logging.info("Finished updating repositories.")
 
 @app.listener('before_server_start')
 async def initialize_scheduler(app, loop):
@@ -74,14 +77,12 @@ if __name__ == "__main__":
     parser.add_argument('--username', help='Specify Username', required=False)
     parser.add_argument('--password', help='Specify Password', required=False)
     parser.add_argument('--cacert', help='Path to your custom root CA', required=False)
-    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False)
+    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False, action='store_true')
     args=parser.parse_args()
 
     cli = args.cli
     
     logging.info("Welcome to the Registry Size Reader, I'll now retrieve the image repository sizes for %s" % args.registry)
-    
-    reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
 
     app.static('/', './static/index.html')
     app.static('/vendor', './static/vendor')
@@ -90,6 +91,8 @@ if __name__ == "__main__":
     if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
+
+    reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
 
     if not cli:
         app.run(host="0.0.0.0", port=int(os.getenv('PORT', 8000)))
