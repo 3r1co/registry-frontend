@@ -6,10 +6,11 @@ This Docker Registry UI implementation was created with the idea in mind to have
 
 This Registry UI is built with the help of [Sanic](https://github.com/huge-success/sanic), JQuery and Bootstrap.
 
-In order to install the frontend components, execute: `npm i && gulp` in the static folder.
-In order to install the backend components, exec `pip install -r requirements.txt` in the root folder.
+In order to install the frontend components, execute: ```npm i && gulp``` in the static folder.
+In order to install the backend components, exec ```pip install -r requirements.txt``` in the root folder.
 
-You can also package the application in a Docker container, the multi-stage Dockerfile in this repository will perform all the necessary steps. `docker build -t docker-registry .`
+You can also package the application in a Docker container, the multi-stage Dockerfile in this repository will perform all the necessary steps. 
+```docker build -t docker-registry .```
 
 # Usage
 
