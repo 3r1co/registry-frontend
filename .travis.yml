@@ -1,0 +1,12 @@
+language: python
+sudo: required
+services:
+- docker
+addons:
+  ssh_known_hosts: 46.101.222.96
+env:
+- DOCKER_IMAGE_NAME="r.3r1.co/registry-ui:$TRAVIS_BUILD_NUMBER"
+after_success:
+- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" r.3r1.co
+- docker build -t $DOCKER_IMAGE_NAME .
+- docker push $DOCKER_IMAGE_NAME
