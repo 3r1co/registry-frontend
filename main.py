@@ -23,9 +23,10 @@ app = Sanic()
 
 @app.route("/repositories.json")
 async def get_repositories(request):
-    dictlist = []
-    for key in app.db.keys():
-        value = app.db.jsonget(key, Path.rootPath())
+    dictlist = list()
+    keys = app.db.keys() if app.persistent else app.db
+    for key in keys:
+        value = app.db.jsonget(key, Path.rootPath()) if app.persistent else app.db[key]
         value.update(repo=key)
         dictlist.append(value)
     return response.json({'data': dictlist})
@@ -39,8 +40,7 @@ async def fetch():
     app.jobRunning = True
 
     loop = asyncio.get_event_loop()
-    connector = aiohttp.TCPConnector(limit = 100)
-    async with aiohttp.ClientSession(loop=loop, connector=connector) as session:
+    async with aiohttp.ClientSession(loop=loop) as session:
     
         repositories = await reg.retrieveRepositories(session)
 
@@ -72,14 +72,16 @@ async def processRepository(session, repo_queue):
 
     repo = await repo_queue.get()
 
-    repoSizeDict = dict()
     tags = await reg.retrieveTagsForRepository(repo, session)
     repoSizeDict = await asyncio.gather(*(reg.retrieveSizeForTagAndRepository(repo, tag, session) for tag in tags))
 
     sizes = dict()
     [sizes.update(s) for s in repoSizeDict]
     size = sum(sizes.values())
-    app.db.jsonset(repo, Path.rootPath(), {'tags' : tags, 'size': size })
+    if app.persistent:
+        app.db.jsonset(repo, Path.rootPath(), {'tags' : tags, 'size': size })
+    else:
+        app.db.update({repo: {'tags' : tags, 'size': size }})
 
     if app.cli:
         app.bar.update(app.count, image="%s (%s)" % (truncate_middle(repo, 30), "{:03d}".format(len(tags))))
@@ -95,7 +97,6 @@ async def initialize_scheduler(app, loop):
     app.scheduler.start()
 
 def is_redis_available():
-    # ... get redis connection here, or pass it in. up to you.
     try:
         app.db.get('*')  # getting None returns None or throws an exception
     except (redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError):
@@ -127,9 +128,15 @@ if __name__ == "__main__":
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
 
-    app.db = Client(host=os.getenv('REDIS_HOST', '192.168.99.100'), charset="utf-8", decode_responses=True)
-    if not is_redis_available():
-        raise Exception('Cannot launch application without redis')
+    if os.getenv('REDIS_HOST') is not None:
+        app.db = Client(host=os.getenv('REDIS_HOST', '192.168.99.100'), charset="utf-8", decode_responses=True)
+        if not is_redis_available():
+            raise Exception('Cannot launch application without connection to redis')
+        app.persistent = True
+    else:
+        app.db = dict()
+        app.persistent = False
+        logging.info("Launching Registry UI without database, data won't be persisted.")
 
     reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
 
@@ -141,3 +148,4 @@ if __name__ == "__main__":
         loop = asyncio.get_event_loop()
         loop.run_until_complete(fetch())
         response = loop.run_until_complete(get_repositories(None))
+        print(response.body.decode("utf-8"))

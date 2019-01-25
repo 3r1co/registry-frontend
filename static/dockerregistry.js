@@ -40,15 +40,25 @@ function sum(images) {
     return sum;
   }
 
+function totalTags(images) {
+    var sum = 0;
+    for( var image in images ) {
+        if(images[image]["tags"]) {
+            sum += images[image]["tags"].length;
+        }
+    }
+    return sum;
+}
+
 $(document).ready(function() {
 
     $.getJSON( "/repositories.json", function(data) {
-        $('#information').text(`Proudly serving ${castByteToNumber(sum(data.data))} of images!`)
+        $('#information').text(`Distinct repositories consume ${castByteToNumber(sum(data.data))} of images! In total, there are ${totalTags(data.data)} tags.`)
         $('#repositories').DataTable( {
             "data": data.data,
             "columns": [
                 { "data": "repo" },
-                { "data": "tags" , render: $.fn.dataTable.render.length()},
+                { "data": "tags" , render: $.fn.dataTable.render.length() },
                 { "data": "size" , render: $.fn.dataTable.render.byteconversion() }
               ],
             "order": [[ 2, "desc" ]]

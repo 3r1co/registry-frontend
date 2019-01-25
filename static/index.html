@@ -47,24 +47,34 @@
     </nav>
 
     <!-- Page Content -->
-    <div class="container">
+    <div class="container-fluid">
       <div class="row">
         <div class="col-lg-12 text-center">
           <h1 class="mt-5">Welcome to the Docker Registory Size Overview</h1>
           <p id="information" class="lead">Come and see who is consuming the most of our precious disk space!</p>
-          <table id="repositories" class="display" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Repository name</th>
-                    <th># of tags</th>
-                    <th>Total size</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
         </div>
       </div>
+      <div class="row">
+          <div class="col-sm">
+            <table id="repositories" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Repository name</th>
+                        <th># of tags</th>
+                        <th>Total size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+          </div>
+          <div class="col-sm">
+            Select Repository
+          </div>
+          <div class="col-sm">
+            Select Tag
+          </div>
+        </div>
     </div>
 
     <!-- Bootstrap core JavaScript -->
