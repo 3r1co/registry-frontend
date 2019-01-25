@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 import ssl
 import json
+import logging
 
 class RegistryClient:
 
@@ -17,21 +18,27 @@ class RegistryClient:
             self.sslcontext = ssl.create_default_context()
 
 
-    async def retrieveRepositories(self, repositories):
-        async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.get(self.registry + "/_catalog", ssl=self.sslcontext) as resp:
-                response = await resp.json()
-                repositories.update(dict((el, {'tags': 0, 'size': 0}) for el in response["repositories"]))
+    async def retrieveRepositories(self, session):
+        repositories = list()
+        session.auth = self.auth
+        async with session.get(self.registry + "/_catalog", ssl=self.sslcontext) as resp:
+            response = await resp.json()
+            repositories.extend(response["repositories"])
+            return repositories
 
-    async def retrieveTagsForRepository(self, repository, tags):
-        async with aiohttp.ClientSession(auth=self.auth) as session:
-            async with session.get(self.registry + "/" + repository + "/tags/list", ssl=self.sslcontext) as resp:
-                response = await resp.json()
-                tags.extend(response["tags"])
+    async def retrieveTagsForRepository(self, repository, session):
+        tags = list()
+        session.auth = self.auth
+        async with session.get(self.registry + "/" + repository + "/tags/list", ssl=self.sslcontext) as resp:
+            response = await resp.json()
+            tags.extend(response["tags"])
+            return tags
 
-    async def retrieveSizeForTagAndRepository(self, repository, tag, sizeDict):
+    async def retrieveSizeForTagAndRepository(self, repository, tag, session):
         headers = {'accept': 'application/vnd.docker.distribution.manifest.v2+json' }
-        async with aiohttp.ClientSession(auth=self.auth) as session:
+        sizeDict = dict()
+        session.auth = self.auth
+        try:
             async with session.get(self.registry + "/" + repository + "/manifests/" + tag, ssl=self.sslcontext, headers=headers) as resp:
                 response = await resp.read()
                 manifest = json.loads(response)
@@ -40,3 +47,7 @@ class RegistryClient:
                 if "layers" in manifest:
                     for layer in manifest["layers"]:
                         sizeDict[layer["digest"]] = layer["size"]
+        except (aiohttp.ServerDisconnectedError):
+            logging.error("Could not retrieve information for image %s:%s" % (repository, tag))
+        return sizeDict
+

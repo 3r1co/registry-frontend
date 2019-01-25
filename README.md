@@ -1,6 +1,6 @@
 # Docker Registry Frontend
 
-![Build Status](https://travis-ci.org/3r1co/registry-frontend.svg?branch=master)
+[![Build Status](https://travis-ci.org/3r1co/registry-frontend.svg?branch=master)](https://travis-ci.org/3r1co/registry-frontend)
 
 
 This Docker Registry UI implementation was created with the idea in mind to have a simple view on huge Docker Registry with the possiblity to easily see how much storage is consumed by which repository.
