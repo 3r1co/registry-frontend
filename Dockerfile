@@ -3,13 +3,11 @@ FROM node:8-alpine as frontend-builder
 RUN mkdir -p /app
 WORKDIR /app
 
-RUN npm install -g gulp
-
-ADD static/package.json .
+ADD frontend/package.json .
 RUN npm install
 
-ADD static .
-RUN gulp
+ADD frontend .
+RUN npm run build
 
 FROM alpine
 
@@ -37,8 +35,7 @@ RUN sed -i 's/:6.3g//g' widgets.py && \
     pip3 uninstall --yes pip uvloop ujson
 
 WORKDIR /app
-COPY --from=frontend-builder /app/vendor ./static/vendor
-ADD static/index.html static/favicon.ico ./static/
+COPY --from=frontend-builder /app/build ./frontend/build/
 ADD registryclient.py helper.py main.py ./
 
 ENTRYPOINT ["/usr/bin/python3", "main.py"]

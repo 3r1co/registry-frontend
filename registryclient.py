@@ -4,6 +4,7 @@ import ssl
 import json
 import logging
 
+
 class RegistryClient:
 
     def __init__(self, registry, username, password, cacert):
@@ -17,8 +18,7 @@ class RegistryClient:
         else:
             self.sslcontext = ssl.create_default_context()
 
-
-    async def retrieveRepositories(self, session):
+    async def retrieve_repositories(self, session):
         repositories = list()
         session.auth = self.auth
         async with session.get(self.registry + "/_catalog", ssl=self.sslcontext) as resp:
@@ -26,7 +26,7 @@ class RegistryClient:
             repositories.extend(response["repositories"])
             return repositories
 
-    async def retrieveTagsForRepository(self, repository, session):
+    async def retrieve_tags_for_repository(self, repository, session):
         tags = list()
         session.auth = self.auth
         async with session.get(self.registry + "/" + repository + "/tags/list", ssl=self.sslcontext) as resp:
@@ -34,20 +34,27 @@ class RegistryClient:
             tags.extend(response["tags"])
             return tags
 
-    async def retrieveSizeForTagAndRepository(self, repository, tag, session):
+    async def retrieve_size_for_tag_and_repository(self, repository, tag, session):
         headers = {'accept': 'application/vnd.docker.distribution.manifest.v2+json' }
-        sizeDict = dict()
+        size_dict = dict()
+        size_dict["repo"] = repository
+        size_dict["tag"] = tag
+        size_dict["sizes"] = dict()
         session.auth = self.auth
         try:
-            async with session.get(self.registry + "/" + repository + "/manifests/" + tag, ssl=self.sslcontext, headers=headers) as resp:
+            async with session.get(self.registry + "/" + repository + "/manifests/" + tag, ssl=self.sslcontext,
+                                   headers=headers) as resp:
                 response = await resp.read()
                 manifest = json.loads(response)
                 if "config" in manifest:
-                    sizeDict["manifest"] = manifest["config"]["size"]
+                    size_dict["sizes"]["manifest"] = manifest["config"]["size"]
                 if "layers" in manifest:
                     for layer in manifest["layers"]:
-                        sizeDict[layer["digest"]] = layer["size"]
-        except (aiohttp.ServerDisconnectedError):
+                        size_dict["sizes"][layer["digest"]] = layer["size"]
+                return size_dict
+        except aiohttp.ServerDisconnectedError:
             logging.error("Could not retrieve information for image %s:%s" % (repository, tag))
-        return sizeDict
 
+    async def retrieve_manifest_v1_for_tag_and_repository(self, repository, tag, session):
+        async with session.get(self.registry + "/" + repository + "/manifests/" + tag, ssl=self.sslcontext) as resp:
+            return await resp.read()

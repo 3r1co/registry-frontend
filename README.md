@@ -7,17 +7,38 @@ This Docker Registry UI implementation was created with the idea in mind to have
 
 # Installation
 
-This Registry UI is built with the help of [Sanic](https://github.com/huge-success/sanic), JQuery and Bootstrap.
+This Registry UI is built with the help of [Sanic](https://github.com/huge-success/sanic) and React.
 
-In order to install the frontend components, execute: ```npm i && gulp``` in the static folder.
-In order to install the backend components, exec ```pip install -r requirements.txt``` in the root folder.
+In order to install the frontend components, execute: 
+
+```npm start``` 
+
+in the frontend folder.
+In order to install the backend components, execute
+ 
+ ```pip install -r requirements.txt``` 
+ 
+ in the root folder.
 
 You can also package the application in a Docker container, the multi-stage Dockerfile in this repository will perform all the necessary steps. 
+
 ```docker build -t docker-registry .```
 
 # Usage
 
-The Registry UI can be started as follows: `python main.py --registry xxx [--username xxx] [--password xxx]`
+The Registry UI can be started as follows: 
+
+`python main.py --registry xxx [--username xxx] [--password xxx] [--cacert ./ca.crt] [--cli]`
+
+or:
+
+`docker run --rm -p 8000 registry-ui --registry xxx [--username xxx] [--password xxx] [--cacert ./ca.crt] [--cli]`
+
+# Roadmap
+
+- Clair integration
+- Delete functionality
+- RBAC
 
 # Debug
 
