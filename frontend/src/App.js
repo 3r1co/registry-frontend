@@ -16,7 +16,7 @@ class App extends Component {
     }
 
     clickRepository = (event, rowData) => {
-        this.tagTable.current.setItems(rowData.tags)
+        this.tagTable.current.setRepo(rowData.repo)
     }
 
     clickTag = (event, rowData) => {

@@ -7,6 +7,7 @@ import sys
 import datetime
 import logging
 import redis
+import json
 from rejson import Client, Path
 
 from sanic import Sanic
@@ -21,20 +22,24 @@ from registryclient import RegistryClient
 app = Sanic()
 
 
-@app.route("/repositories.json")
+@app.route("/status")
+async def get_jobs(request):
+    return response.json(app.jobRunning)
+
+
+@app.route("/repositories")
 async def get_repositories(request):
     dictlist = list()
     keys = app.db.keys() if app.persistent else app.db
     for key in keys:
         value = app.db.jsonget(key, Path.rootPath()) if app.persistent else app.db[key]
-        value.update(repo=key)
-        dictlist.append(value)
+        dictlist.append({'repo': key, 'tags': len(value['tags']), 'size': value['size']})
     return response.json({'data': dictlist})
 
 
-@app.route("/status")
-async def get_jobs(request):
-    return response.json(app.jobRunning)
+@app.route("/tags/<repo>")
+async def get_tags(request, repo):
+    return response.json(app.db.jsonget(repo, Path.rootPath())) if app.persistent else response.json(app.db[repo])
 
 
 @app.route('/manifest/<repo>/<tag>')

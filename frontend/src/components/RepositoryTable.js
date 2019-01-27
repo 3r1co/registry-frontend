@@ -4,9 +4,7 @@ import {CastByteToNumber} from '../helpers.js'
 
 const columns=[
     { title: 'Repository', field: 'repo' },
-    { title: '# of tags', field: 'tags' , type: 'numeric', render: rowData => {
-        return rowData.tags.length
-    }},
+    { title: '# of tags', field: 'tags' , type: 'numeric'},
     { title: 'Size', field: 'size', render: rowData => {
         return CastByteToNumber(rowData.size)
     }}
@@ -28,7 +26,7 @@ class RepositoryTable extends Component {
     }
 
     componentDidMount() {
-        fetch("/repositories.json")
+        fetch("/repositories")
             .then(res => res.json())
             .then((result) => {
 

@@ -8,7 +8,7 @@ addons:
   ssh_known_hosts: 46.101.222.96
 cache: pip
 install:
-  - pip install -r requirements.txt
+  - echo "Skipping local pip, do build in Docker"
 script:
   - echo "Success"
 env:

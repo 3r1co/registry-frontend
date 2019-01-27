@@ -22,17 +22,41 @@ class TagsTable extends Component {
         this.state = {
             error: null,
             isLoaded: false,
-            items: []
+            items: [],
         };
         this.onClick = props.onClick
     }
 
-    setItems(items) {
-        this.setState(() => ({
-            items: items
-        }));
+    setRepo(repo) {
+        if (sessionStorage.getItem(repo)) {
+            console.log(sessionStorage.getItem(repo))
+            this.updateTags(JSON.parse(sessionStorage.getItem(repo)))
+        } else {
+            fetch(`/tags/${repo}`)
+                .then(res => res.json())
+                .then((result) => {
+                    this.updateTags(result)
+                    sessionStorage.setItem(repo, JSON.stringify(result))
+                },
+                (error) => {
+                    this.setState({
+                    isLoaded: true,
+                    error
+                });
+                }
+            )
+        }
     }
 
+    updateTags(tags) {
+        this.setState({
+            isLoaded: true,
+            items: tags.tags
+        });
+        if(tags.tags.length === 1) {
+            this.onClick(null, tags.tags[0])
+        }
+    }
 
     render() {
         return (
