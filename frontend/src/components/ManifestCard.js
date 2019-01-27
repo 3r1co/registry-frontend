@@ -18,7 +18,7 @@ import {CastByteToNumber} from '../helpers.js'
 
 const styles = theme => ({
   card: {
-    //maxWidth: 400,
+    maxWidth: 570,
   },
   media: {
     height: 0,
@@ -53,7 +53,7 @@ class ManifestCard extends React.Component {
             manifest: null,
             expanded: false,
             cardHeader: "Please select Repository and Tag",
-            size: ""
+            size: " "
         };
     }
 
@@ -66,10 +66,27 @@ class ManifestCard extends React.Component {
     for(var entry in tag.sizes) {
             total += tag.sizes[entry]
     }
-    this.setState(() => ({
-            cardHeader: tag.repo + ":" + tag.tag,
-            size: CastByteToNumber(total)
+
+    fetch(`/manifest/${tag.repo}/${tag.tag}`)
+    .then(res => res.json())
+    .then((result) => {
+        this.setState(() => ({
+            manifest: result
         }));
+    },
+    (error) => {
+        this.setState({
+        isLoaded: true,
+        error
+    });
+    }
+)
+
+    this.setState(() => ({
+        cardHeader: tag.repo + ":" + tag.tag,
+        size: CastByteToNumber(total)
+    }));
+
    }
 
   render() {
@@ -93,7 +110,7 @@ class ManifestCard extends React.Component {
         />
         <CardContent>
           <Typography component="p">
-
+            {this.state.manifest}
           </Typography>
         </CardContent>
         <CardActions className={classes.actions} disableActionSpacing>

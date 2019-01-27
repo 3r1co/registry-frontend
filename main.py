@@ -44,8 +44,10 @@ async def get_tags(request, repo):
 
 @app.route('/manifest/<repo>/<tag>')
 async def tag_handler(request, repo, tag):
+    loop = asyncio.get_event_loop()
     async with aiohttp.ClientSession(loop=loop) as session:
-        return await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)
+        resp = await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)
+        return response.json(resp)
 
 
 async def fetch():
@@ -64,7 +66,8 @@ async def fetch():
         logging.info("Fetching the info for %d repositories" % len(repositories))
 
         if app.cli:
-            widgets=[ progressbar.DynamicMessage("image"), progressbar.Bar(), progressbar.Percentage(),' [', progressbar.Timer(), '] ' ]
+            widgets=[ progressbar.DynamicMessage("image"), progressbar.Bar(),
+                      progressbar.Percentage(),' [', progressbar.Timer(), '] ']
             app.bar = progressbar.ProgressBar(maxval=len(repositories), widgets=widgets)
             app.bar.start()
             app.count = 1
@@ -101,7 +104,8 @@ async def process_repository(session, repo_queue):
         app.bar.update(app.count, image="%s (%s)" % (truncate_middle(repo, 30), "{:03d}".format(len(tags))))
         app.count += 1
     else:
-        logging.info("Updated repository with %s with %d tags (Total size: %s)" % (repo, len(tags), sizeof_fmt(total_size)))
+        logging.info("Updated repository with %s with %d tags (Total size: %s)" %
+                     (repo, len(tags), sizeof_fmt(total_size)))
 
 
 @app.listener('before_server_start')
@@ -128,11 +132,18 @@ if __name__ == "__main__":
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--registry',help='Specify the URL of your docker registry (use protocol prefix like http or https)', required=True)
-    parser.add_argument('--username', help='Specify Username', required=False)
-    parser.add_argument('--password', help='Specify Password', required=False)
-    parser.add_argument('--cacert', help='Path to your custom root CA', required=False)
-    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False, action='store_true')
+    parser.add_argument('--registry',
+                        help='Specify the URL of your docker registry (use protocol prefix like http or https)',
+                        required=True,
+                        default=os.environ.get('DOCKER_REGISTRY', None))
+    parser.add_argument('--username', help='Specify Username', required=False,
+                        default=os.environ.get('DOCKER_USERNAME', None))
+    parser.add_argument('--password', help='Specify Password', required=False,
+                        default=os.environ.get('DOCKER_PASSWORD', None))
+    parser.add_argument('--cacert', help='Path to your custom root CA', required=False,
+                        default=os.environ.get('DOCKER_CACERT', None))
+    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False,
+                        action='store_true')
     args = parser.parse_args()
 
     app.cli = args.cli
