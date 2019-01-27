@@ -32,7 +32,7 @@ RUN pip install -r requirements.txt
 #This is a really dirty hack as it seems to DynamicMessage ProgressBar Widget only supports numbers
 WORKDIR /usr/lib/python3.6/site-packages/progressbar
 RUN sed -i 's/:6.3g//g' widgets.py && \
-    pip3 uninstall --yes pip uvloop ujson
+    pip3 uninstall --yes pip
 
 WORKDIR /app
 COPY --from=frontend-builder /app/build ./frontend/build/
