@@ -21,6 +21,8 @@ from registryclient import RegistryClient
 
 app = Sanic()
 
+REPO_PREFIX = "repo_"
+MANIFEST_PREFIX = "manifest_"
 
 @app.route("/status")
 async def get_jobs(request):
@@ -30,24 +32,30 @@ async def get_jobs(request):
 @app.route("/repositories")
 async def get_repositories(request):
     dictlist = list()
-    keys = app.db.keys() if app.persistent else app.db
-    for key in keys:
-        value = app.db.jsonget(key, Path.rootPath()) if app.persistent else app.db[key]
-        dictlist.append({'repo': key, 'tags': len(value['tags']), 'size': value['size']})
+    repos = app.db.keys("repo_*") if app.persistent else app.db
+    for repo in repos:
+        value = app.db.jsonget(repo, Path.rootPath()) if app.persistent else app.db[key]
+        dictlist.append({'repo': repo[len(REPO_PREFIX):], 'tags': len(value['tags']), 'size': value['size']})
     return response.json({'data': dictlist})
 
 
-@app.route("/tags/<repo>")
+@app.route("/tags/<repo:(?:.+/)?([^:]+)(?::.+)?>")
 async def get_tags(request, repo):
-    return response.json(app.db.jsonget(repo, Path.rootPath())) if app.persistent else response.json(app.db[repo])
+    return response.json(app.db.jsonget(REPO_PREFIX + repo, Path.rootPath())) if app.persistent else response.json(app.db[repo])
 
 
-@app.route('/manifest/<repo>/<tag>')
+@app.route('/manifest/<repo:path>/<tag>')
 async def tag_handler(request, repo, tag):
     loop = asyncio.get_event_loop()
-    async with aiohttp.ClientSession(loop=loop) as session:
-        resp = await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)
-        return response.json(resp)
+    key = repo + "/" + tag
+    manifest = app.db.jsontype(MANIFEST_PREFIX + key, Path.rootPath()) if app.persistent else app.manifests[key]
+    if manifest is not None:
+        return response.json(app.db.jsonget(MANIFEST_PREFIX + key, Path.rootPath()))
+    else:
+        async with aiohttp.ClientSession(loop=loop) as session:
+            resp = await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)
+            app.db.jsonset(MANIFEST_PREFIX + key, Path.rootPath(), resp.decode("utf-8"))
+            return response.json(resp.decode("utf-8"))
 
 
 async def fetch():
@@ -95,10 +103,11 @@ async def process_repository(session, repo_queue):
     sizes = dict()
     [sizes.update(s["sizes"]) for s in tags_and_sizes]
     total_size = sum(sizes.values())
-    if app.persistent:
-        app.db.jsonset(repo, Path.rootPath(), {'tags' : tags_and_sizes, 'size': total_size })
+
+    if app.persistent:  
+        app.db.jsonset(REPO_PREFIX + repo, Path.rootPath(), {'tags' : tags_and_sizes, 'size': total_size })
     else:
-        app.db.update({repo: {'tags' : tags_and_sizes, 'size': total_size }})
+        app.db.update({repo: {'tags' : tags_and_sizes, 'size': total_size }})    
 
     if app.cli:
         app.bar.update(app.count, image="%s (%s)" % (truncate_middle(repo, 30), "{:03d}".format(len(tags))))
@@ -161,8 +170,10 @@ if __name__ == "__main__":
         if not is_redis_available():
             raise Exception('Cannot launch application without connection to redis')
         app.persistent = True
+
     else:
         app.db = dict()
+        app.manifests = dict()
         app.persistent = False
         logging.info("Launching Registry UI without database, data won't be persisted.")
 

@@ -13,12 +13,15 @@ import Typography from '@material-ui/core/Typography';
 import red from '@material-ui/core/colors/red';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
+import JSONPretty from 'react-json-pretty';
+import JSONPrettyTheme from 'react-json-pretty/dist/monikai';
 
 import {CastByteToNumber} from '../helpers.js'
 
 const styles = theme => ({
   card: {
-    maxWidth: 570,
   },
   media: {
     height: 0,
@@ -48,7 +51,7 @@ class ManifestCard extends React.Component {
         super(props);
         this.state = {
             error: null,
-            isLoaded: false,
+            isLoaded: true,
             tag: null,
             manifest: null,
             expanded: false,
@@ -62,26 +65,34 @@ class ManifestCard extends React.Component {
   };
 
   setManifest(tag) {
+
+    this.setState(() => ({
+      isLoaded: false,
+      manifest: ""
+    }));
+
+    var encodedRepo = encodeURIComponent(tag.repo)
+    var encodedTag = encodeURIComponent(tag.tag)
+    fetch(`/manifest/${encodedRepo}/${encodedTag}`)
+      .then(res => res.json())
+      .then((result) => {
+          this.setState(() => ({
+              manifest: result,
+              isLoaded: true
+          }));
+      },
+      (error) => {
+          this.setState({
+          isLoaded: true,
+          error
+      });
+      }
+    )
+
     var total =0
     for(var entry in tag.sizes) {
             total += tag.sizes[entry]
     }
-
-    fetch(`/manifest/${tag.repo}/${tag.tag}`)
-    .then(res => res.json())
-    .then((result) => {
-        this.setState(() => ({
-            manifest: result
-        }));
-    },
-    (error) => {
-        this.setState({
-        isLoaded: true,
-        error
-    });
-    }
-)
-
     this.setState(() => ({
         cardHeader: tag.repo + ":" + tag.tag,
         size: CastByteToNumber(total)
@@ -109,9 +120,12 @@ class ManifestCard extends React.Component {
           subheader={this.state.size}
         />
         <CardContent>
-          <Typography component="p">
-            {this.state.manifest}
-          </Typography>
+        <Typography paragraph>
+        {!this.state.isLoaded && (
+          <CircularProgress />
+        )}
+        <JSONPretty id="json-pretty" data={this.state.manifest} theme={JSONPrettyTheme} />
+        </Typography>
         </CardContent>
         <CardActions className={classes.actions} disableActionSpacing>
           <IconButton
@@ -128,9 +142,6 @@ class ManifestCard extends React.Component {
         <Collapse in={this.state.expanded} timeout="auto" unmountOnExit>
           <CardContent>
             <Typography paragraph>Vulnerabilites:</Typography>
-            <Typography paragraph>
-
-            </Typography>
             <Typography paragraph>
 
             </Typography>

@@ -7,7 +7,7 @@ const columns=[
     { title: '# of tags', field: 'tags' , type: 'numeric'},
     { title: 'Size', field: 'size', render: rowData => {
         return CastByteToNumber(rowData.size)
-    }}
+    }, defaultSort: 'desc' }
 ]
 
 const options = {
