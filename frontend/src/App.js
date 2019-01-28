@@ -27,7 +27,7 @@ class App extends Component {
         return (
             <div>
                 <NavBar />
-                <Grid container spacing={24} style={{padding: 24}}>
+                <Grid container spacing={24} style={{padding: 24, margin: 0, width: '100%'}}>
                     <Grid item xs="4">
                         <RepositoryTable onClick={this.clickRepository} />
                     </Grid>

@@ -13,7 +13,9 @@ const columns=[
     }}
 ]
 
-const options = {};
+const options = {
+    pageSize: 10
+};
 
 class TagsTable extends Component {
 
@@ -28,6 +30,12 @@ class TagsTable extends Component {
     }
 
     setRepo(repo) {
+
+        this.setState({
+            isLoaded: false,
+            items: []
+        });
+
         if (sessionStorage.getItem(repo)) {
             console.log(sessionStorage.getItem(repo))
             this.updateTags(JSON.parse(sessionStorage.getItem(repo)))
@@ -36,7 +44,9 @@ class TagsTable extends Component {
                 .then(res => res.json())
                 .then((result) => {
                     this.updateTags(result)
-                    sessionStorage.setItem(repo, JSON.stringify(result))
+                    try {
+                        sessionStorage.setItem(repo, JSON.stringify(result))
+                    }catch(e) {};
                 },
                 (error) => {
                     this.setState({

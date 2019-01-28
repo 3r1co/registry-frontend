@@ -14,9 +14,12 @@ import red from '@material-ui/core/colors/red';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import Grid from '@material-ui/core/Grid';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Snackbar from '@material-ui/core/Snackbar';
 
-import JSONPretty from 'react-json-pretty';
-import JSONPrettyTheme from 'react-json-pretty/dist/monikai';
+import ReactJson from 'react-json-view'
 
 import {CastByteToNumber} from '../helpers.js'
 
@@ -56,7 +59,9 @@ class ManifestCard extends React.Component {
             manifest: null,
             expanded: false,
             cardHeader: "Please select Repository and Tag",
-            size: " "
+            size: "---",
+            anchorEl: null,
+            notificationOpen: false
         };
     }
 
@@ -64,11 +69,27 @@ class ManifestCard extends React.Component {
     this.setState(state => ({ expanded: !state.expanded }));
   };
 
+  handleClick = event => {
+    this.setState({ anchorEl: event.currentTarget });
+  };
+
+  handleClose = () => {
+    this.setState({ anchorEl: null });
+  };
+
+  openNotification = () => {
+    this.setState({ notificationOpen: true });
+  }
+
+  closeNotification = () => {
+    this.setState({ notificationOpen: false });
+  }
+
   setManifest(tag) {
 
     this.setState(() => ({
       isLoaded: false,
-      manifest: ""
+      manifest: null
     }));
 
     var encodedRepo = encodeURIComponent(tag.repo)
@@ -77,7 +98,7 @@ class ManifestCard extends React.Component {
       .then(res => res.json())
       .then((result) => {
           this.setState(() => ({
-              manifest: result,
+              manifest: JSON.parse(result),
               isLoaded: true
           }));
       },
@@ -102,6 +123,7 @@ class ManifestCard extends React.Component {
 
   render() {
     const { classes } = this.props;
+    const { anchorEl } = this.state;
 
     return (
       <Card className={classes.card}>
@@ -112,19 +134,25 @@ class ManifestCard extends React.Component {
             </Avatar>
           }
           action={
-            <IconButton>
+            <IconButton
+            aria-owns={anchorEl ? 'simple-menu' : undefined}
+            aria-haspopup="true"
+            disabled={this.state.manifest == null}
+            onClick={this.handleClick} >
               <MoreVertIcon />
             </IconButton>
           }
           title={this.state.cardHeader}
-          subheader={this.state.size}
-        />
+          subheader={this.state.size} >
+        </CardHeader>
         <CardContent>
         <Typography paragraph>
         {!this.state.isLoaded && (
-          <CircularProgress />
+          <Grid container justify = "center">
+            <CircularProgress />
+          </Grid>
         )}
-        <JSONPretty id="json-pretty" data={this.state.manifest} theme={JSONPrettyTheme} />
+        { this.state.manifest != null ? <ReactJson src={this.state.manifest} /> : null }
         </Typography>
         </CardContent>
         <CardActions className={classes.actions} disableActionSpacing>
@@ -150,6 +178,29 @@ class ManifestCard extends React.Component {
             </Typography>
           </CardContent>
         </Collapse>
+        <Menu
+          id="simple-menu"
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={this.handleClose}
+          >
+        <MenuItem onClick={this.openNotification}>Trigger Vulnerability Scan</MenuItem>
+        <MenuItem onClick={this.openNotification}>Transfer</MenuItem>
+        <MenuItem onClick={this.openNotification}>Delete</MenuItem>
+        </Menu>
+        <Snackbar
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          open={this.state.notificationOpen}
+          autoHideDuration={2000}
+          onClose={this.closeNotification}
+          ContentProps={{
+            'aria-describedby': 'message-id',
+          }}
+          message={<span id="message-id">Not yet implemented.</span>}
+        />
       </Card>
     );
   }

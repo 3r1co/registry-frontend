@@ -11,6 +11,7 @@ const columns=[
 ]
 
 const options = {
+    pageSize: 10
 };
 
 class RepositoryTable extends Component {
@@ -54,6 +55,11 @@ class RepositoryTable extends Component {
           columns={columns}
           options={options}
           onRowClick={this.onClick}
+          localization={{
+            body: {
+                emptyDataSourceMessage: 'Loading repositories...',
+            },
+            }}
         />
     );
   }
