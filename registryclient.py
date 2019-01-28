@@ -19,19 +19,19 @@ class RegistryClient:
             self.sslcontext = ssl.create_default_context()
 
     async def retrieve_repositories(self, session):
-        repositories = list()
+        repositories = set()
         session.auth = self.auth
         async with session.get(self.registry + "/_catalog", ssl=self.sslcontext) as resp:
             response = await resp.json()
-            repositories.extend(response["repositories"])
+            repositories.update(response["repositories"])
             return repositories
 
     async def retrieve_tags_for_repository(self, repository, session):
-        tags = list()
+        tags = set()
         session.auth = self.auth
         async with session.get(self.registry + "/" + repository + "/tags/list", ssl=self.sslcontext) as resp:
             response = await resp.json()
-            tags.extend(response["tags"])
+            tags.update(response["tags"])
             return tags
 
     async def retrieve_size_for_tag_and_repository(self, repository, tag, session):
