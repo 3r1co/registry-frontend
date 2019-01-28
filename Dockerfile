@@ -1,4 +1,4 @@
-FROM node:8-alpine as frontend-builder
+FROM node:alpine as frontend-builder
 
 RUN mkdir -p /app
 WORKDIR /app
@@ -34,6 +34,9 @@ WORKDIR /usr/lib/python3.6/site-packages/progressbar
 RUN sed -i 's/:6.3g//g' widgets.py && \
     pip3 uninstall --yes pip
 
+RUN adduser -D registry && chown registry /app
+
+USER registry
 WORKDIR /app
 COPY --from=frontend-builder /app/build ./frontend/build/
 ADD registryclient.py helper.py main.py ./

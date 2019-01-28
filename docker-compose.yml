@@ -4,7 +4,8 @@ services:
     build: .
     ports:
      - "8000:8000"
-    command: "--registry ${DOCKER_REGISTRY} --username ${DOCKER_USERNAME} --password ${DOCKER_PASSWORD}"
+    env_file:
+     - .env
     environment:
      - "REDIS_HOST=${REDIS_HOST}"
      - "LOGLEVEL=debug"

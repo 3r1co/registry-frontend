@@ -12,7 +12,7 @@ class RegistryClient:
         if username and password:
             self.auth = aiohttp.BasicAuth(username, password)
         else:
-            self.auth = aiohttp.BasicAuth("xxx", "xxx")
+            self.auth = None
         if cacert:
             self.sslcontext = ssl.create_default_context(cafile=cacert)
         else:

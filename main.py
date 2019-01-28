@@ -1,7 +1,6 @@
 import progressbar
 import asyncio
 import aiohttp
-import argparse
 import os
 import sys
 import datetime
@@ -9,6 +8,7 @@ import logging
 import redis
 import json
 from rejson import Client, Path
+from configargparse import ArgParser
 
 from sanic import Sanic
 from sanic import response
@@ -34,7 +34,7 @@ async def get_repositories(request):
     dictlist = list()
     repos = app.db.keys("repo_*") if app.persistent else app.db
     for repo in repos:
-        value = app.db.jsonget(repo, Path.rootPath()) if app.persistent else app.db[key]
+        value = app.db.jsonget(repo, Path.rootPath()) if app.persistent else app.db[repo]
         dictlist.append({'repo': repo[len(REPO_PREFIX):], 'tags': len(value['tags']), 'size': value['size']})
     return response.json({'data': dictlist})
 
@@ -54,7 +54,10 @@ async def tag_handler(request, repo, tag):
     else:
         async with aiohttp.ClientSession(loop=loop) as session:
             resp = await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)
-            app.db.jsonset(MANIFEST_PREFIX + key, Path.rootPath(), resp.decode("utf-8"))
+            if app.persistent:
+                app.db.jsonset(MANIFEST_PREFIX + key, Path.rootPath(), resp.decode("utf-8"))
+            else:
+                app.manifests[key] = resp.decode("utf-8")
             return response.json(resp.decode("utf-8"))
 
 
@@ -133,6 +136,26 @@ def is_redis_available():
         return False
     return True
 
+def initArguments():
+    parser = ArgParser()
+    parser.add_argument('--registry',
+                        help='Specify the URL of your docker registry (use protocol prefix like http or https)',
+                        required=True,
+                        env_var='DOCKER_REGISTRY')
+    parser.add_argument('--username', help='Specify Username', required=False,
+                        env_var='DOCKER_USERNAME')
+    parser.add_argument('--password', help='Specify Password', required=False,
+                        env_var='DOCKER_PASSWORD')
+    parser.add_argument('--cacert', help='Path to your custom root CA', required=False,
+                        env_var='DOCKER_CACERT')
+    parser.add_argument('--redis', help='Hostname of your Redis instance', required=False,
+                        env_var='REDIS_HOST')
+    parser.add_argument('--port', help='Hostname of your Redis instance', required=False,
+                        env_var='PORT')
+    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False,
+                        action='store_true')
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
 
@@ -140,20 +163,7 @@ if __name__ == "__main__":
                         format='%(asctime)s %(message)s', 
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--registry',
-                        help='Specify the URL of your docker registry (use protocol prefix like http or https)',
-                        required=True,
-                        default=os.environ.get('DOCKER_REGISTRY', None))
-    parser.add_argument('--username', help='Specify Username', required=False,
-                        default=os.environ.get('DOCKER_USERNAME', None))
-    parser.add_argument('--password', help='Specify Password', required=False,
-                        default=os.environ.get('DOCKER_PASSWORD', None))
-    parser.add_argument('--cacert', help='Path to your custom root CA', required=False,
-                        default=os.environ.get('DOCKER_CACERT', None))
-    parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False,
-                        action='store_true')
-    args = parser.parse_args()
+    args = initArguments()
 
     app.cli = args.cli
 
@@ -165,8 +175,8 @@ if __name__ == "__main__":
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
 
-    if os.getenv('REDIS_HOST') is not None:
-        app.db = Client(host=os.getenv('REDIS_HOST', '192.168.99.100'), charset="utf-8", decode_responses=True)
+    if args.redis is not None:
+        app.db = Client(host=args.redis, charset="utf-8", decode_responses=True)
         if not is_redis_available():
             raise Exception('Cannot launch application without connection to redis')
         app.persistent = True
@@ -182,7 +192,7 @@ if __name__ == "__main__":
     logging.info("Welcome to the Docker Registry UI, I'll now retrieve the image repository sizes for %s" % args.registry)
 
     if not app.cli:
-        app.run(host="0.0.0.0", port=int(os.getenv('PORT', 8000)))
+        app.run(host="0.0.0.0", port=int(args.port))
     else:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(fetch())
