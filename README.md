@@ -4,21 +4,23 @@
 
 
 This Docker Registry UI implementation was created with the idea in mind to have a simple view on huge Docker Registry with the possiblity to easily see how much storage is consumed by which repository.
+Therefore it is built with a little Python backend that handles the repository processing in order to store the amount of tags and their distinct sizes. We found out that it makes more sense to cache these values, rather than computing them on every request.
 
 # Installation
 
 This Registry UI is built with the help of [Sanic](https://github.com/huge-success/sanic) and React.
+
+In order to install the backend components, execute
+ 
+ ```pip install -r requirements.txt``` 
+ 
+ in the root folder.
 
 In order to install the frontend components, execute: 
 
 ```npm start``` 
 
 in the frontend folder.
-In order to install the backend components, execute
- 
- ```pip install -r requirements.txt``` 
- 
- in the root folder.
 
 You can also package the application in a Docker container, the multi-stage Dockerfile in this repository will perform all the necessary steps. 
 

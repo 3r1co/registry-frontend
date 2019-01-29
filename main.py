@@ -136,7 +136,7 @@ def is_redis_available():
         return False
     return True
 
-def initArguments():
+def init_args():
     parser = ArgParser()
     parser.add_argument('--registry',
                         help='Specify the URL of your docker registry (use protocol prefix like http or https)',
@@ -151,11 +151,29 @@ def initArguments():
     parser.add_argument('--redis', help='Hostname of your Redis instance', required=False,
                         env_var='REDIS_HOST')
     parser.add_argument('--port', help='Hostname of your Redis instance', required=False,
-                        env_var='PORT')
+                        env_var='PORT', default="8000")
     parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False,
                         action='store_true')
     return parser.parse_args()
 
+def init_db(app, args):
+    if args.redis is not None:
+        app.db = Client(host=args.redis, charset="utf-8", decode_responses=True)
+        if not is_redis_available():
+            raise Exception('Cannot launch application without connection to redis')
+        app.persistent = True
+    else:
+        app.db = dict()
+        app.manifests = dict()
+        app.persistent = False
+        logging.info("Launching Registry UI without database, data won't be persisted.")
+
+def init_app(app, args):
+    app.cli = args.cli
+    app.static('/', './frontend/build/index.html')
+    app.static('/static', './frontend/build/static')
+    app.static('/favicon.ico', './frontend/build/favicon.ico')
+    app.reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
 
 if __name__ == "__main__":
 
@@ -163,33 +181,15 @@ if __name__ == "__main__":
                         format='%(asctime)s %(message)s', 
                         datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    args = initArguments()
-
-    app.cli = args.cli
-
-    app.static('/', './frontend/build/index.html')
-    app.static('/static', './frontend/build/static')
-    app.static('/favicon.ico', './frontend/build/favicon.ico')
-
     if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
 
-    if args.redis is not None:
-        app.db = Client(host=args.redis, charset="utf-8", decode_responses=True)
-        if not is_redis_available():
-            raise Exception('Cannot launch application without connection to redis')
-        app.persistent = True
+    args = init_args()
+    init_db(app, args)
+    init_app(app, args)
 
-    else:
-        app.db = dict()
-        app.manifests = dict()
-        app.persistent = False
-        logging.info("Launching Registry UI without database, data won't be persisted.")
-
-    app.reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
-
-    logging.info("Welcome to the Docker Registry UI, I'll now retrieve the image repository sizes for %s" % args.registry)
+    logging.info("Welcome to the Docker Registry UI, I'll now retrieve the repositories for %s" % args.registry)
 
     if not app.cli:
         app.run(host="0.0.0.0", port=int(args.port))
