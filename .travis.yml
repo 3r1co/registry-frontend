@@ -13,7 +13,7 @@ cache: pip
 install:
   - echo "Skipping local pip, do build in Docker"
 script:
-  - sonar-scanner
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=.
 env:
 - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BUILD_NUMBER"
 after_success:
