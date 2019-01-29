@@ -13,7 +13,7 @@ async def tag_handler(request, repo, tag):
     app = request.app
     manifest = app.db.jsontype(MANIFEST_PREFIX + key, Path.rootPath()) if app.persistent else app.manifests[key]
     if manifest is not None:
-        return response.json(app.db.jsonget(MANIFEST_PREFIX + key, Path.rootPath()))
+        return response.json(app.db.jsonget(MANIFEST_PREFIX + key, Path.rootPath())) if app.persistent else response.json(manifest)
     else:
         async with aiohttp.ClientSession(loop=loop) as session:
             resp = await app.reg.retrieve_manifest_v1_for_tag_and_repository(repo, tag, session)

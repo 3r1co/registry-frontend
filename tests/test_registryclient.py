@@ -66,10 +66,8 @@ async def test_retrieve_manifest_v1_for_tag_and_repository(global_data, client):
         assert response["architecture"] == "amd64"
         await session.close()
 
-def check_equal(L1, L2):
-    print(L1)
-    print(L2)
-    return len(L1) == len(L2) and sorted(L1) == sorted(L2)
+def check_equal(s1, s2):
+    return len(s1) == len(s2) and sorted(s1) == sorted(s2)
 
 def get_resource(filename):
     return os.path.join(os.path.dirname(__file__), 'resources', filename)
