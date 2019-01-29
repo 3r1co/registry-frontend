@@ -1,3 +1,6 @@
+import redis
+import logging
+
 def truncate_middle(s, n):
     if len(s) <= n:
         # string is already short-enough
@@ -14,3 +17,11 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+def is_redis_available(app):
+    try:
+        app.db.get('*')  # getting None returns None or throws an exception
+    except (redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError):
+        logging.error("Cannot connect to redis, please check connection.")
+        return False
+    return True

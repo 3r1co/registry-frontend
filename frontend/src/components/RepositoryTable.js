@@ -27,7 +27,7 @@ class RepositoryTable extends Component {
     }
 
     componentDidMount() {
-        fetch("/repositories")
+        fetch("/api/repositories")
             .then(res => res.json())
             .then((result) => {
 

@@ -40,7 +40,7 @@ class TagsTable extends Component {
             console.log(sessionStorage.getItem(repo))
             this.updateTags(JSON.parse(sessionStorage.getItem(repo)))
         } else {
-            fetch(`/tags/${repo}`)
+            fetch(`/api/tags/${repo}`)
                 .then(res => res.json())
                 .then((result) => {
                     this.updateTags(result)

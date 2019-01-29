@@ -94,7 +94,7 @@ class ManifestCard extends React.Component {
 
     var encodedRepo = encodeURIComponent(tag.repo)
     var encodedTag = encodeURIComponent(tag.tag)
-    fetch(`/manifest/${encodedRepo}/${encodedTag}`)
+    fetch(`/api/manifest/${encodedRepo}/${encodedTag}`)
       .then(res => res.json())
       .then((result) => {
           this.setState(() => ({
