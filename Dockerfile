@@ -39,6 +39,8 @@ RUN adduser -D registry && chown registry /app
 USER registry
 WORKDIR /app
 COPY --from=frontend-builder /app/build ./frontend/build/
-ADD registryclient.py helper.py main.py ./
+ADD registryclient.py main.py ./
+ADD helpers ./helpers
+ADD api ./api
 
 ENTRYPOINT ["/usr/bin/python3", "main.py"]

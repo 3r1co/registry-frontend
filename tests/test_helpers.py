@@ -1,13 +1,14 @@
-import pytest
 import random
 import string
 from types import SimpleNamespace
-
-import redis
 from unittest import mock
 
-from helpers import constants, helper, init_functions
+import pytest
+import redis
+
 import registryclient
+from helpers import constants, helper, init_functions
+
 
 def test_repo_prefix():
     assert constants.REPO_PREFIX == "repo_"
@@ -83,6 +84,7 @@ def test_init_db_persistence(mock_rejson):
     init_functions.init_db(app, args)
     assert app.persistent == True
 
+
 @mock.patch('helpers.init_functions.Client')
 @mock.patch('helpers.init_functions.is_redis_available')
 def test_init_db_persistence_no_connection(mock_is_available, mock_rejson):
@@ -96,6 +98,7 @@ def test_init_db_persistence_no_connection(mock_is_available, mock_rejson):
     except Exception:
         pass
 
+
 def test_init_app():
     app = mock.Mock()
     app.static = mock.MagicMock()
@@ -104,7 +107,7 @@ def test_init_app():
     args.username = "username"
     args.password = "password"
     args.cli = False
-    args.cacert = "ca.crt"
+    args.cacert = None
     init_functions.init_app(app, args)
     assert app.static.call_count == 3
     assert isinstance(app.reg, registryclient.RegistryClient)
