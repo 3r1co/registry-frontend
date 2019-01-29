@@ -21,6 +21,8 @@ def init_args():
                         env_var='DOCKER_CACERT')
     parser.add_argument('--redis', help='Hostname of your Redis instance', required=False,
                         env_var='REDIS_HOST')
+    parser.add_argument('--listen', help='Hostname of your Redis instance', required=False,
+                        env_var='LISTEN', default="0.0.0.0")
     parser.add_argument('--port', help='Hostname of your Redis instance', required=False,
                         env_var='PORT', default="8000")
     parser.add_argument('--cli', help='Flag for a one time analysis instead of you', required=False,

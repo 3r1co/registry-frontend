@@ -1,6 +1,7 @@
 # Docker Registry Frontend
 
 [![Build Status](https://travis-ci.org/3r1co/registry-frontend.svg?branch=master)](https://travis-ci.org/3r1co/registry-frontend)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=3r1co_registry-frontend&metric=alert_status)](https://sonarcloud.io/dashboard?id=3r1co_registry-frontend)
 
 
 This Docker Registry UI implementation was created with the idea in mind to have a simple view on huge Docker Registry with the possiblity to easily see how much storage is consumed by which repository.

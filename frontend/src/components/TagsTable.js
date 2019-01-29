@@ -46,7 +46,7 @@ class TagsTable extends Component {
                     this.updateTags(result)
                     try {
                         sessionStorage.setItem(repo, JSON.stringify(result))
-                    }catch(e) {};
+                    }catch(e) {}
                 },
                 (error) => {
                     this.setState({

@@ -11,9 +11,12 @@ addons:
     organization: "3r1co-github"
 cache: pip
 install:
-  - echo "Skipping local pip, do build in Docker"
+  - pip install -r requirements.txt
+  - pip install pytest-cov
+  - pytest --cov=. tests/
+  - coverage xml -i
 script:
-  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=.
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.python.coverage.reportPath=coverage.xml
 env:
 - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BUILD_NUMBER"
 after_success:

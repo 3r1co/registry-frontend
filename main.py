@@ -2,15 +2,16 @@
 import asyncio
 import logging
 import os
-import sys
 from types import SimpleNamespace
 
+import sys
 from sanic import Sanic
 
 from api import api
 from api.repositories import get_repositories
 from helpers.data_retrieval import fetch
 from helpers.init_functions import init_app, init_args, init_db
+
 
 def main():
     logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper(), 
@@ -30,7 +31,7 @@ def main():
     logging.info("Welcome to the Docker Registry UI, I'll now retrieve the repositories for %s", args.registry)
 
     if not args.cli:
-        app.run(host="0.0.0.0", port=int(args.port), debug=args.debug)
+        app.run(host=args.listen, port=int(args.port), debug=args.debug)
     else:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(fetch(app))
