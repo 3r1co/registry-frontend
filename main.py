@@ -12,6 +12,7 @@ from api.repositories import get_repositories
 from helpers.data_retrieval import fetch
 from helpers.init_functions import init_app, init_args, init_db
 
+app = Sanic(__name__)
 
 def main():
     logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper(), 
@@ -21,7 +22,6 @@ def main():
     if sys.platform == 'win32':
         asyncio.set_event_loop(asyncio.ProactorEventLoop())
 
-    app = Sanic()
     app.blueprint(api)
 
     args = init_args(sys.argv[1:])

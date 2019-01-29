@@ -8,7 +8,7 @@ import logging
 class RegistryClient:
 
     def __init__(self, registry, username, password, cacert):
-        self.registry = registry
+        self.registry = registry + "/v2"
         if username and password:
             self.auth = aiohttp.BasicAuth(username, password)
         else:

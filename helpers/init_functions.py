@@ -50,4 +50,4 @@ def init_app(app, args):
     app.static('/', './frontend/build/index.html')
     app.static('/static', './frontend/build/static')
     app.static('/favicon.ico', './frontend/build/favicon.ico')
-    app.reg = RegistryClient(args.registry + "/v2", args.username, args.password, args.cacert)
+    app.reg = RegistryClient(args.registry, args.username, args.password, args.cacert)
