@@ -1,11 +1,13 @@
 import asyncio
 import logging
-import progressbar
-import aiohttp
 
+import aiohttp
+import progressbar
 from rejson import Path
-from helpers.helper import truncate_middle, sizeof_fmt
+
 from helpers.constants import REPO_PREFIX
+from helpers.helper import truncate_middle, sizeof_fmt
+
 
 async def fetch(app):
 
@@ -13,9 +15,7 @@ async def fetch(app):
 
     loop = asyncio.get_event_loop()
     async with aiohttp.ClientSession(loop=loop) as session:
-    
         repositories = await app.reg.retrieve_repositories(session)
-
         progress_queue = asyncio.Queue(loop=loop)
         for repo in repositories:
             progress_queue.put_nowait(repo)
@@ -23,12 +23,11 @@ async def fetch(app):
         logging.info("Fetching the info for %d repositories", len(repositories))
 
         if app.cli:
-            widgets=[ progressbar.DynamicMessage("image"), progressbar.Bar(),
-                      progressbar.Percentage(),' [', progressbar.Timer(), '] ']
+            widgets = [progressbar.DynamicMessage("image"), progressbar.Bar(),
+                       progressbar.Percentage(), ' [', progressbar.Timer(), '] ']
             app.bar = progressbar.ProgressBar(maxval=len(repositories), widgets=widgets)
             app.bar.start()
             app.count = 1
-        
         async with aiohttp.ClientSession(loop=loop) as session:
             tasks = [(process_repository(app, session, progress_queue)) for repo in repositories]
             await asyncio.gather(*tasks)
@@ -64,4 +63,3 @@ async def process_repository(app, session, repo_queue):
     else:
         logging.info("Updated repository with %s with %d tags (Total size: %s)",
                      repo, len(tags), sizeof_fmt(total_size))
-                     
