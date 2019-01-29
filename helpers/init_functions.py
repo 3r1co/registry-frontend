@@ -7,7 +7,7 @@ from helpers.helper import is_redis_available
 from registryclient import RegistryClient
 
 
-def init_args():
+def init_args(args):
     parser = ArgParser()
     parser.add_argument('--registry',
                         help='Specify the URL of your docker registry (use protocol prefix like http or https)',
@@ -29,7 +29,7 @@ def init_args():
                         action='store_true')
     parser.add_argument('--debug', help='Start Sanic in debug mode', required=False,
                         action='store_true')
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def init_db(app, args):

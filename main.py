@@ -24,7 +24,7 @@ def main():
     app = Sanic()
     app.blueprint(api)
 
-    args = init_args()
+    args = init_args(sys.argv[1:])
     init_db(app, args)
     init_app(app, args)
 
