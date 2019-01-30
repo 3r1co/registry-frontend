@@ -1,41 +1,32 @@
 dist: trusty
 sudo: required
+language: generic
 services:
 - docker
 addons:
-  ssh_known_hosts: 46.101.222.96
   sonarcloud:
     organization: "3r1co-github"
-jobs:
-  include:
-    - language: python
-      stage: "Build Backend"
-      python:
-        - "3.6"
-      before_script:
-        - pip install -r requirements.txt
-        - pip install -r test_requirements.txt
-      script:
-        - pytest --cov=. tests/
-        - coverage xml -i
-      cache: pip
-    - language: node_js
-      stage: "Build Frontend"
-      node_js:
-        - "node"
-      before_script:
-        - cd frontend
-        - npm install
-      cache: npm
-      script:
-        - npm test -- --coverage
-    - stage: "SonarQube Analysis"
-      script:
-        - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
-    - stage: "Build and Push Docker Image"
-      env:
-        - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BUILD_NUMBER"
-      script:
-        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker build -t $DOCKER_IMAGE_NAME .
-        - docker push $DOCKER_IMAGE_NAME
+env:
+  - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BUILD_NUMBER"
+node_js:
+  - "node"
+python:
+  - "3.6"
+cache:
+  - pip
+  - npm
+before_install:
+  - pip install -r requirements.txt
+  - pip install -r test_requirements.txt
+  - cd frontend
+  - npm install
+install:
+  - pytest --cov=. tests/
+  - coverage xml -i
+  - cd frontend
+  - npm test -- --coverage
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+before_script:
+  - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker build -t $DOCKER_IMAGE_NAME .
+  - docker push $DOCKER_IMAGE_NAME
