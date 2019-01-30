@@ -31,7 +31,7 @@ install:
   - coverage xml -i
   - cd frontend
   - npm test -- --coverage
-  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.host.url=https://sonarcloud.io -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.organization=3r1co-github -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/** -Dsonar.host.url=https://sonarcloud.io -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
 before_script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker build -t $DOCKER_IMAGE_NAME .
