@@ -20,9 +20,9 @@ before_install:
   - npm install -s
 install:
   - npm test -- --coverage
-  - coverage xml -i
   - cd ..
   - pytest --cov=. tests/
+  - coverage xml -i
 script:
   - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/**,frontend/coverage/lcov-report,coverage.xml -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
 after_script:
