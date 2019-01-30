@@ -21,16 +21,17 @@ before_install:
   - cd $TRAVIS_BUILD_DIR
   - pyenv global 3.6.3
   - nvm install node
-  - pip install -r requirements.txt
-  - pip install -r test_requirements.txt
+  - pip install -q -r requirements.txt
+  - pip install -q -r test_requirements.txt
   - cd frontend
-  - npm install
+  - npm install -s
   - cd .. #Important to go back to root before installation step
 install:
   - pytest --cov=. tests/
   - coverage xml -i
   - cd frontend
   - npm test -- --coverage
+  - cd ..
   - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.organization=3r1co-github -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/** -Dsonar.host.url=https://sonarcloud.io -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
 before_script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
