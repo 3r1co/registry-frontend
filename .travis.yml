@@ -1,7 +1,4 @@
-language: python
 dist: trusty
-python:
-  - "3.6"
 sudo: required
 services:
 - docker
@@ -9,17 +6,31 @@ addons:
   ssh_known_hosts: 46.101.222.96
   sonarcloud:
     organization: "3r1co-github"
-cache: pip
-install:
-  - pip install -r requirements.txt
-  - pip install -r test_requirements.txt
-  - pytest --cov=. tests/
-  - coverage xml -i
-script:
-  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.python.coverage.reportPath=coverage.xml
+matrix:
+  include:
+    - language: python
+      python:
+        - "3.6"
+      before_script:
+        - pip install -r requirements.txt
+        - pip install -r test_requirements.txt
+      script:
+        - pytest --cov=. tests/
+        - coverage xml -i
+      cache: pip
+    - language: node_js
+      node_js:
+        - "node"
+      before_script:
+        - cd frontend
+        - npm install
+      cache: npm
+      script:
+        - npm test -- --coverage
 env:
 - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BUILD_NUMBER"
 after_success:
+- sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
 - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 - docker build -t $DOCKER_IMAGE_NAME .
 - docker push $DOCKER_IMAGE_NAME
