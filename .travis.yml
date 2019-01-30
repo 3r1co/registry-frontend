@@ -24,7 +24,7 @@ install:
   - pytest --cov=. tests/
   - coverage xml -i
 script:
-  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/**,frontend/coverage/lcov-report/**,coverage.xml -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/**,frontend/coverage/lcov-report/**,**/*.test.js,coverage.xml -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
 after_script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker build -t $DOCKER_IMAGE_NAME .
