@@ -1,8 +1,11 @@
-from api import api
-import pytest
-import main
 import os
 from unittest import mock
+
+import pytest
+
+import main
+from api import api
+
 
 @pytest.fixture(scope = 'module')
 def app():
@@ -15,6 +18,10 @@ def app():
 def test_status_200(app):
     _, response = app.test_client.get('/api/status')
     assert response.status == 200
+    assert response.body.decode("utf-8") == "false"
+    app.job_running = True
+    _, response = app.test_client.get('/api/status')
+    assert response.status == 200
     assert response.body.decode("utf-8") == "true"
 
 
@@ -24,10 +31,12 @@ def test_manifest(app):
     _, response = app.test_client.get('/api/manifest/test/alpine/latest')
     assert response.status == 200
 
+
 def test_repositories(app):
     app.db = {'test/alpine': {'tags': ["latest"], 'size': 1}}
     _, response = app.test_client.get('/api/repositories')
     assert response.status == 200
+
 
 def get_resource(filename):
     return os.path.join(os.path.dirname(__file__), 'resources', filename)

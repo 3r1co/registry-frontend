@@ -10,8 +10,7 @@ from helpers.helper import truncate_middle, sizeof_fmt
 
 
 async def fetch(app):
-
-    app.jobRunning = True
+    app.job_running = True
 
     loop = asyncio.get_event_loop()
     async with aiohttp.ClientSession(loop=loop) as session:
@@ -34,11 +33,11 @@ async def fetch(app):
 
         if app.cli:
             app.bar.finish()
-            app.jobRunning = False
+            app.job_running = False
         else: 
             logging.info("Finished updating repositories.")
 
-        app.jobRunning = False
+        app.job_running = False
 
 
 async def process_repository(app, session, repo_queue):

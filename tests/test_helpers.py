@@ -101,7 +101,6 @@ def test_init_db_persistence_no_connection(mock_is_available, mock_rejson):
 
 def test_init_app():
     app = mock.Mock()
-    app.static = mock.MagicMock()
     args = SimpleNamespace()
     args.registry = "http://localhost:5000"
     args.username = "username"
@@ -109,5 +108,4 @@ def test_init_app():
     args.cli = False
     args.cacert = None
     init_functions.init_app(app, args)
-    assert app.static.call_count == 3
     assert isinstance(app.reg, registryclient.RegistryClient)

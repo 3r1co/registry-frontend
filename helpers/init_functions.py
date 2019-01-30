@@ -47,7 +47,4 @@ def init_db(app, args):
 
 def init_app(app, args):
     app.cli = args.cli
-    app.static('/', './frontend/build/index.html')
-    app.static('/static', './frontend/build/static')
-    app.static('/favicon.ico', './frontend/build/favicon.ico')
     app.reg = RegistryClient(args.registry, args.username, args.password, args.cacert)

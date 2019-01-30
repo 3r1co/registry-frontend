@@ -9,10 +9,13 @@ from sanic import Sanic
 
 from api import api
 from api.repositories import get_repositories
+from api.scheduler import scheduler
+from api.static import static
 from helpers.data_retrieval import fetch
 from helpers.init_functions import init_app, init_args, init_db
 
 app = Sanic(__name__)
+
 
 def main():
     logging.basicConfig(level=os.environ.get('LOGLEVEL', 'INFO').upper(), 
@@ -23,6 +26,8 @@ def main():
         asyncio.set_event_loop(asyncio.ProactorEventLoop())
 
     app.blueprint(api)
+    app.blueprint(scheduler)
+    app.blueprint(static)
 
     args = init_args(sys.argv[1:])
     init_db(app, args)
@@ -39,6 +44,7 @@ def main():
         setattr(request, "app", app)
         response = loop.run_until_complete(get_repositories(request))
         print(response.body.decode("utf-8"))
+
 
 if __name__ == "__main__":
     main()
