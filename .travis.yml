@@ -25,7 +25,6 @@ before_install:
 install:
   - npm test -- --coverage
   - cd ..
-  - go test -json > report.json
   - go test -coverprofile=coverage.out
 script:
   - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=$SONAR_EXCLUSIONS -Dsonar.javascript.lcov.reportPaths=$SONAR_NODE_COVERAGE -Dsonar.go.coverage.reportPaths=$SONAR_GO_COVERAGE
