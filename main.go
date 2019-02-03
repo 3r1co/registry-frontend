@@ -1,4 +1,4 @@
-package main
+package registry
 
 import (
 	"encoding/json"
@@ -123,6 +123,11 @@ var (
 	m   map[string]*Repository
 	hub *registry.Registry
 )
+
+// Sum just to check if sonar is working
+func Sum(a int, b int) int {
+	return a + b
+}
 
 func main() {
 

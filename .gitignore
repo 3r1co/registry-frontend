@@ -2,3 +2,4 @@ __pycache__
 registry-frontend
 .vscode
 .idea
+coverage.out

@@ -9,26 +9,25 @@ addons:
 env:
   global:
     - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
-    - SONAR_EXCLUSIONS="frontend/node_modules/**,frontend/coverage/lcov-report/**,**/*.test.js,coverage.xml"
-    - SONAR_PYTHON_COVERAGE="coverage.xml"
+    - SONAR_EXCLUSIONS="frontend/node_modules/**,frontend/coverage/lcov-report/**,**/*.test.js,coverage.xml,**/*_test.go"
     - SONAR_NODE_COVERAGE="frontend/coverage/lcov.info"
+    - SONAR_GO_COVERAGE="coverage.out"
 cache:
   - pip
   - npm
 before_install:
   - pyenv global 3.6.3
   - nvm install node
-  - pip install -q -r requirements.txt
-  - pip install -q -r test_requirements.txt
+  - gimme stable
   - cd frontend
   - npm install -s
 install:
   - npm test -- --coverage
   - cd ..
-  - pytest --cov=. tests/
-  - coverage xml -i
+  - go test -json > report.json
+  - go test -coverprofile=coverage.out
 script:
-  - sonar-scanner -Dsonar.exclusions=$SONAR_EXCLUSIONS -Dsonar.python.coverage.reportPath=$SONAR_PYTHON_COVERAGE -Dsonar.javascript.lcov.reportPaths=$SONAR_NODE_COVERAGE
+  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=$SONAR_EXCLUSIONS -Dsonar.javascript.lcov.reportPaths=$SONAR_NODE_COVERAGE -Dsonar.go.coverage.reportPaths=$SONAR_GO_COVERAGE
 after_script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker build -t $DOCKER_IMAGE_NAME .
