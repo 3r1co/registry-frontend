@@ -1,9 +1,10 @@
-package registry
+package main
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -138,10 +139,11 @@ func main() {
 		err      error
 	)
 
-	flag.StringVar(&url, "registry", "", "Address of the registry, including protocol prefix")
-	flag.StringVar(&username, "username", "", "Username for the registry")
-	flag.StringVar(&password, "password", "", "Password for the registry")
-	flag.Parse()
+	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "DOCKER", 0)
+	fs.StringVar(&url, "registry", "", "Address of the registry, including protocol prefix")
+	fs.StringVar(&username, "username", "", "Username for the registry")
+	fs.StringVar(&password, "password", "", "Password for the registry")
+	fs.Parse(os.Args[1:])
 
 	log.Print("Starting Registry UI server...")
 
