@@ -97,8 +97,13 @@ class ManifestCard extends React.Component {
     fetch(`/api/manifest/${encodedRepo}/${encodedTag}`)
       .then(res => res.json())
       .then((result) => {
+
+          if(typeof result !== 'object') {
+            result = JSON.parse(result)
+          }
+
           this.setState(() => ({
-              manifest: JSON.parse(result),
+              manifest: result,
               isLoaded: true
           }));
       },

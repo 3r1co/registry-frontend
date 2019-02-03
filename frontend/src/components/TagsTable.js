@@ -10,7 +10,7 @@ const columns=[
             total += rowData.sizes[entry]
         }
         return CastByteToNumber(total)
-    }}
+    }, defaultSort: 'desc' }
 ]
 
 const options = {
