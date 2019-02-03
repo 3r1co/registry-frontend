@@ -19,6 +19,7 @@ before_install:
   - pyenv global 3.6.3
   - nvm install node
   - gimme stable
+  - go get -d -v
   - cd frontend
   - npm install -s
 install:
