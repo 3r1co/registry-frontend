@@ -7,7 +7,11 @@ addons:
   sonarcloud:
     organization: "3r1co-github"
 env:
-  - DOCKER_IMAGE_NAME="3r1co/registry-ui:TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
+  global:
+    - DOCKER_IMAGE_NAME="3r1co/registry-ui:$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
+    - SONAR_EXCLUSIONS="frontend/node_modules/**,frontend/coverage/lcov-report/**,**/*.test.js,coverage.xml"
+    - SONAR_PYTHON_COVERAGE="coverage.xml"
+    - SONAR_NODE_COVERAGE="frontend/coverage/lcov.info"
 cache:
   - pip
   - npm
@@ -24,7 +28,7 @@ install:
   - pytest --cov=. tests/
   - coverage xml -i
 script:
-  - sonar-scanner -Dsonar.projectKey=3r1co_registry-frontend -Dsonar.sources=. -Dsonar.exclusions=frontend/node_modules/**,frontend/coverage/lcov-report/**,**/*.test.js,coverage.xml -Dsonar.python.coverage.reportPath=coverage.xml -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
+  - sonar-scanner -Dsonar.exclusions=$SONAR_EXCLUSIONS -Dsonar.python.coverage.reportPath=$SONAR_PYTHON_COVERAGE -Dsonar.javascript.lcov.reportPaths=$SONAR_NODE_COVERAGE
 after_script:
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker build -t $DOCKER_IMAGE_NAME .
