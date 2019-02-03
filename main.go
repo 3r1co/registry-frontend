@@ -80,7 +80,7 @@ func fetchManifest(repository string, tag string, repo *Repository, totalSizeMap
 	wg.Done()
 }
 
-func fetchTags(hub *registry.Registry, repository string, m map[string]*Repository, i int, wg *sync.WaitGroup) {
+func fetchTags(hub *registry.Registry, repository string, m map[string]*Repository, wg *sync.WaitGroup) {
 
 	var wgTags sync.WaitGroup
 
@@ -112,9 +112,9 @@ func fetchRepositories() time.Duration {
 		log.Fatal("Could not retrieve repositories")
 	}
 	var wg sync.WaitGroup
-	for index, repository := range repositories {
+	for _, repository := range repositories {
 		wg.Add(1)
-		go fetchTags(hub, repository, m, index, &wg)
+		go fetchTags(hub, repository, m, &wg)
 	}
 	wg.Wait()
 	return time.Since(start)

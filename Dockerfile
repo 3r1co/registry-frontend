@@ -5,7 +5,7 @@ RUN apk update && apk add --no-cache git ca-certificates && \
 
 COPY main.go .
 RUN go get -d -v
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/registry-ui
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/registry-ui
 
 FROM node:alpine as frontend-builder
 
@@ -15,10 +15,11 @@ WORKDIR /app
 ADD frontend/package.json .
 RUN yarn install
 
+ENV GENERATE_SOURCEMAP=false
 ADD frontend .
 RUN yarn build
 
-FROM alpine
+FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /go/bin/registry-ui /registry-ui
