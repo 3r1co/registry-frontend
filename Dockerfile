@@ -1,11 +1,12 @@
 FROM golang:alpine AS builder
-RUN apk update && apk add --no-cache git ca-certificates && \
+RUN apk update && apk add --no-cache git ca-certificates upx && \
     update-ca-certificates && \
     adduser -D -g '' appuser
 
 COPY main.go .
 RUN go get -d -v
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/registry-ui
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/registry-ui && \
+    upx --brute /go/bin/registry-ui
 
 FROM node:alpine as frontend-builder
 
