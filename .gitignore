@@ -3,3 +3,6 @@ registry-frontend
 .vscode
 .idea
 coverage.out
+.coverage
+ca.crt
+coverage.xml

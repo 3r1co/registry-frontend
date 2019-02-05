@@ -48,6 +48,9 @@ type Tag struct {
 	Layers map[string]int64 `json:"sizes,omitempty"`
 }
 
+type semaphore struct {
+}
+
 func getRepositories(w http.ResponseWriter, r *http.Request) {
 	response := &Response{}
 	for _, repo := range m {
@@ -67,57 +70,87 @@ func getManifest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(manifestV1)
 }
 
-func fetchManifest(repository string, tag string, repo *Repository, totalSizeMap map[string]int64, wg *sync.WaitGroup) {
-	manifest, _ := hub.ManifestV2(repository, tag)
+func fetchManifest(repository string, tag string, chTag chan<- Tag, wg *sync.WaitGroup, chSemaphore chan semaphore) {
+
 	layerMap := make(map[string]int64)
+
+	chSemaphore <- semaphore{}
+	manifest, err := hub.ManifestV2(repository, tag)
+	<-chSemaphore
+
+	if err != nil {
+		log.Print("Error while retrieving manifest, ignoring.")
+		wg.Done()
+		return
+	}
 	layerMap[manifest.Config.Digest.String()] = manifest.Config.Size
-	totalSizeMap[manifest.Config.Digest.String()] = manifest.Config.Size
 	for _, layer := range manifest.Layers {
 		layerMap[layer.Digest.String()] = layer.Size
-		totalSizeMap[layer.Digest.String()] = layer.Size
 	}
-	repo.Tags = append(repo.Tags, Tag{Tag: tag, Layers: layerMap, Repo: repository})
+	t := &Tag{Repo: repository, Tag: tag, Layers: layerMap}
+	chTag <- *t
 	wg.Done()
 }
 
-func fetchTags(hub *registry.Registry, repository string, m map[string]*Repository, wg *sync.WaitGroup) {
+func fetchTags(hub *registry.Registry, repository string, chRepo chan<- *Repository, wgc *sync.WaitGroup, chSemaphore chan semaphore) {
+	repo := &Repository{Name: repository}
 
-	var wgTags sync.WaitGroup
-
-	repo := Repository{Name: repository}
 	tags, _ := hub.Tags(repository)
 
-	totalSizeMap := make(map[string]int64)
-
-	log.Printf("Fetching repository %s with %d tags.", repository, len(tags))
-
+	// Fetch all manifests to determine repository sizes
+	var wg sync.WaitGroup
+	chTag := make(chan Tag, len(tags))
 	for _, tag := range tags {
-		wgTags.Add(1)
-		go fetchManifest(repository, tag, &repo, totalSizeMap, &wgTags)
+		wg.Add(1)
+		fetchManifest(repository, tag, chTag, &wg, chSemaphore)
 	}
-	wgTags.Wait()
-
+	wg.Wait()
+	close(chTag)
+	totalSizeMap := make(map[string]int64)
+	for tag := range chTag {
+		repo.Tags = append(repo.Tags, tag)
+		for layer, size := range tag.Layers {
+			totalSizeMap[layer] = size
+		}
+	}
+	var totalSize int64
 	for _, size := range totalSizeMap {
-		repo.TotalSize += size
+		totalSize += size
 	}
-	m[repository] = &repo
-	wg.Done()
+	repo.TotalSize = totalSize
+	chRepo <- repo
+	wgc.Done()
+	log.Printf("Processed repository %s with %d tags.", repo.Name, len(repo.Tags))
 }
 
-func fetchRepositories() time.Duration {
-	start := time.Now()
+func fetchRepositories() {
+
+	concurrencyLimit := 40
+
 	repositories, err := hub.Repositories()
-	m = make(map[string]*Repository, len(repositories))
+
 	if err != nil {
 		log.Fatal("Could not retrieve repositories")
 	}
+
 	var wg sync.WaitGroup
+	chRepo := make(chan *Repository, len(repositories))
+	chSemaphore := make(chan semaphore, concurrencyLimit)
+
 	for _, repository := range repositories {
 		wg.Add(1)
-		go fetchTags(hub, repository, m, &wg)
+		go fetchTags(hub, repository, chRepo, &wg, chSemaphore)
 	}
 	wg.Wait()
-	return time.Since(start)
+	close(chRepo)
+
+	numberOfTags := 0
+
+	for repo := range chRepo {
+		m[repo.Name] = repo
+		numberOfTags += len(repo.Tags)
+	}
+	log.Printf("Number of Tags served: %d", numberOfTags)
 }
 
 var (
@@ -147,31 +180,25 @@ func main() {
 
 	log.Print("Starting Registry UI server...")
 
-	hub, err = registry.New(url, username, password)
-	hub.Logf = registry.Quiet
+	hub, err = registry.NewInsecure(url, username, password)
 
 	if err != nil {
-		log.Fatal("Could not connect to registry.")
+		log.Fatal("Could not connect to registry.", err)
 	}
 
-	duration := fetchRepositories()
+	hub.Logf = registry.Quiet
+	start := time.Now()
 
-	log.Printf("Happily serving %d repositories, took %s.", len(m), duration)
+	m = make(map[string]*Repository)
+
+	fetchRepositories()
+
+	log.Printf("Happily serving %d repositories, took %s.", len(m), time.Since(start))
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/repositories", getRepositories).Methods("GET")
 	router.HandleFunc("/api/tags/{repo:(?:.+/)?(?:[^:]+)(?::.+)?}", getTags).Methods("GET")
 	router.HandleFunc("/api/manifest/{repo:(?:.+/)?(?:[^:]+)(?::.+)?}/{tag}", getManifest).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/build/")))
-	router.Use(simpleMw)
 	log.Fatal(http.ListenAndServe(":8000", router))
-}
-
-func simpleMw(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
-		log.Println(r.RequestURI)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r)
-	})
 }
