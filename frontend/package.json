@@ -10,13 +10,16 @@
     "react-dom": "^16.7.0",
     "react-json-view": "^1.19.1",
     "react-scripts": "2.1.3",
-    "typeface-roboto": "0.0.54"
+    "typeface-roboto": "0.0.54",
+    "snyk": "^1.189.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -38,5 +41,6 @@
       "lcov",
       "text-summary"
     ]
-  }
+  },
+  "snyk": true
 }
